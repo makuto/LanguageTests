@@ -10,6 +10,9 @@ I test various language functionalities and usage experience. The test would be 
 
 * The languages
 ** Zig
+- [[https://ziglang.org/][Homepage and overview]]
+- [[https://ziglang.org/download/][Download]]
+- [[https://ziglang.org/documentation/master/][Documentation]]
 ** Carp
 ** Steam Bank Common Lisp (SBCL)
 * Criteria
@@ -26,6 +29,9 @@ I test various language functionalities and usage experience. The test would be 
 | Language | My CLOC | Time to implement | Comments |
 |----------+---------+-------------------+----------|
 |          |         |                   |          |
+
+*** Zig
+- Right out of the box, the [[https://ziglang.org/documentation/master/][Hello World documentation]] did not compile. It's a rapidly changing language, so it's not unexpected, but a little annoying
 
 ** Maintainability/sustainability
 
