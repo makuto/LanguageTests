@@ -1,0 +1,34 @@
+#+TITLE:Language Tests
+
+I test various language functionalities and usage experience. The test would be a pain in the ass in C, which is what I'm trying to beat.
+
+* The test
+- Write a command-line tool which takes several optional arguments
+- The tool creates and manipulates numeric data based on the arguments, then serializes the data to a file
+- The file should include several different fields and a string or something (i.e. not a perfect 4-byte float dump)
+- The tool can load from the file and manipulate that data
+
+* The languages
+** Zig
+** Carp
+** Steam Bank Common Lisp (SBCL)
+* Criteria
+** Features
+
+| Language | Has REPL | Has hot-reloading | Introspection | Compile-time code generation |
+|----------+----------+-------------------+---------------+------------------------------|
+| Zig      |          |                   |               |                              |
+| Carp     |          |                   |               |                              |
+| SBCL     | Yes      |                   |               |                              |
+
+** Implementation
+
+| Language | My CLOC | Time to implement | Comments |
+|----------+---------+-------------------+----------|
+|          |         |                   |          |
+
+** Maintainability/sustainability
+
+| Language | CLOC | Repo health | Comments |
+|----------+------+-------------+----------|
+|          |      |             |          |
