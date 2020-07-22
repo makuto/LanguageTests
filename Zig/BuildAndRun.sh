@@ -1,4 +1,4 @@
 #!/bin/sh
 
-~/local/bin/zig build-exe Main.zig && ./Main
+~/local/bin/zig build-exe Main.zig && ./Main test
 

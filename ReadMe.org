@@ -13,6 +13,7 @@ I test various language functionalities and usage experience. The test would be 
 - [[https://ziglang.org/][Homepage and overview]]
 - [[https://ziglang.org/download/][Download]]
 - [[https://ziglang.org/documentation/master/][Documentation]]
+- [[https://github.com/ziglang/zig][Repository]]
 ** Carp
 ** Steam Bank Common Lisp (SBCL)
 * Criteria
@@ -24,6 +25,10 @@ I test various language functionalities and usage experience. The test would be 
 | Carp     |          |                   |               |                              |
 | SBCL     | Yes      |                   |               |                              |
 
+*** C interoperability
+**** Zig
+**** Carp
+**** SBCL
 ** Implementation
 
 | Language | My CLOC | Time to implement | Comments |
@@ -31,10 +36,14 @@ I test various language functionalities and usage experience. The test would be 
 |          |         |                   |          |
 
 *** Zig
-- Right out of the box, the [[https://ziglang.org/documentation/master/][Hello World documentation]] did not compile. It's a rapidly changing language, so it's not unexpected, but a little annoying
+- Right out of the box, the [[https://ziglang.org/documentation/master/][Hello World documentation]] did not compile. It's a rapidly changing language, so it's not unexpected, but a little annoying. I'm building my documentation from my source now, so I shouldn't have this problem again
+- I like that what type of allocator I'm using is very explicit (I'm using [[https://github.com/ziglang/zig/blob/master/doc/docgen.zig][docgen.zig]] as a reference for my test)
+- I like the ~defer~ keyword already, though by default it seems there's no errors or warnings if I omit it (and the memory should be freed)
 
 ** Maintainability/sustainability
 
-| Language | CLOC | Repo health | Comments |
-|----------+------+-------------+----------|
-|          |      |             |          |
+| Language | CLOC   | Repo health          | Comments |
+|----------+--------+----------------------+----------|
+| Zig      | 1.74M¹ | Very active. Healthy |          |
+
+¹CLOC did not detect Zig as a language. This count does not include LLVM or other dependencies.
