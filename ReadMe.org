@@ -1,6 +1,8 @@
 #+TITLE:Language Tests
 
-I test various language functionalities and usage experience. The test would be a pain in the ass in C, which is what I'm trying to beat.
+I test various language functionalities and usage experience. I want to find a language which will significantly increase my productivity over C++, without having significant drawbacks.
+
+I used to think C++ was the ideal language, but lately I've felt disappointed with how gross templates get, and how complex the stack has become. I would conform more closely to C, but managing memory without any destructors (or ~defer~, etc.) is a definite pain point.
 
 * The test
 - Write a command-line tool which takes several optional arguments
@@ -8,42 +10,74 @@ I test various language functionalities and usage experience. The test would be 
 - The file should include several different fields and a string or something (i.e. not a perfect 4-byte float dump)
 - The tool can load from the file and manipulate that data
 
+The test program would be a pain in the ass to write in C, which is what I'm trying to beat.
 * The languages
 ** Zig
 - [[https://ziglang.org/][Homepage and overview]]
 - [[https://ziglang.org/download/][Download]]
 - [[https://ziglang.org/documentation/master/][Documentation]]
 - [[https://github.com/ziglang/zig][Repository]]
+
+Zig uses LLVM to generate machine code. It also uses LLVM to handle C interoperability.
 ** Carp
-** Steam Bank Common Lisp (SBCL)
+- [[https://github.com/carp-lang/Carp][Repository]]
+- [[https://github.com/carp-lang/Carp/blob/master/docs/LanguageGuide.md][Language guide]]
+
+Carp compiles into C, then uses a C compiler to create the machine code.
+** Steel Bank Common Lisp (SBCL)
+- [[http://www.sbcl.org/][Homepage]]
+- [[http://www.sbcl.org/platform-table.html][Download]]
+- [[https://sourceforge.net/p/sbcl/sbcl/ci/master/tree/][Repository]]
+
+SBCL has its own machine-code compiler.
+
+** /Explanation/
+I selected Zig because it takes performance seriously, and has compilation-time code execution support. I'm also a Zig sponsor, so I wanted to do this project to try out what I'm supporting :). I didn't pick Rust because I don't think the memory management overhead is worth it. I'm no expert on that though, so I could be very wrong.
+
+I picked two Lisp-y languages because I'm enticed by the talk of how powerful it is (I love the idea of [[https://en.wikipedia.org/wiki/Game_Oriented_Assembly_Lisp][GOAL]]), and how you can extend the language within the language. I also like that most Lisps have compile-time code execution and hotreloading. The former is good for things like serialization which are common in games but very painful in C/C++. It's also nice to make things more automatic, like module initialization. Hotreloading is good for drastically shortening the iteration time.
+
+My biggest criticisms of Lisps is how much they rely on garbage collection and data structures with poor cache characteristics (linked lists). I'm hoping Carp will give me the best of both worlds (no GC, but still Lisp-y) there. SBCL is the closest to a "normal" Lisp in case I do find it acceptable performance-wise.
 * Criteria
 ** Features
+These are features important to me to have:
 
-| Language | Has REPL | Has hot-reloading | Introspection | Compile-time code generation |
-|----------+----------+-------------------+---------------+------------------------------|
-| Zig      |          |                   |               |                              |
-| Carp     |          |                   |               |                              |
-| SBCL     | Yes      |                   |               |                              |
+| Language | Has REPL | Has hot-reloading | Introspection | Compile-time code generation | Memory management¹       |
+|----------+----------+-------------------+---------------+------------------------------+--------------------------|
+| Zig      | No       |                   |               |                              | [[https://ziglang.org/documentation/master/#Memory][All manual. Explicit]]     |
+| Carp     |          |                   |               |                              | [[https://github.com/carp-lang/Carp]["Automatic", no GC]]       |
+| SBCL     | Yes      |                   |               |                              | Garbage-collected ([[https://www.cons.org/cmucl/doc/gc-tuning.html][a]], [[https://medium.com/@MartinCracauer/llvms-garbage-collection-facilities-and-sbcl-s-generational-gc-a13eedfb1b31][b]]) |
+
+¹I'm usually working on high-performance apps like games, so it is important that I have fine-grained control over memory and can reliably avoid stalls. The language should help me achieve high performance without making me suffer for it, one way or another (hard implementation vs. bad runtime performance).
 
 *** C interoperability
+C holds such a massive amount of value to interface with, especially in game development (e.g. most console SDKs are written in C++, which is different from C but can be interfaced with through C wrappers).
+
 **** Zig
+- [[https://ziglang.org/#Integration-with-C-libraries-without-FFIbindings][Zig's summary of its C library interoperability]]
+- [[https://ziglang.org/documentation/master/#C][More documentation on C interop]]
+
+This is a huge plus to Zig, because writing bindings is tedious and gratuitous.
+
+Zig also has excellent C ABI export ability, meaning if I write a bunch of Zig code, then switch back to C or C++, I will still be able to reasonably use that Zig code - no "boxing", weird conversions, etc. necessary.
 **** Carp
 **** SBCL
-** Implementation
+** My Implementations
 
-| Language | My CLOC | Time to implement | Comments |
-|----------+---------+-------------------+----------|
-|          |         |                   |          |
+| Language | My CLOC | Time to implement | Executable size |
+|----------+---------+-------------------+-----------------|
+| Zig      |         | 1h                |                 |
+| Carp     |         |                   |                 |
+| SBCL     |         |                   |                 |
 
 *** Zig
-- Right out of the box, the [[https://ziglang.org/documentation/master/][Hello World documentation]] did not compile. It's a rapidly changing language, so it's not unexpected, but a little annoying. I'm building my documentation from my source now, so I shouldn't have this problem again
-- I like that what type of allocator I'm using is very explicit (I'm using [[https://github.com/ziglang/zig/blob/master/doc/docgen.zig][docgen.zig]] as a reference for my test)
+- Right out of the box, the [[https://ziglang.org/documentation/master/][Hello World documentation]] did not compile against my installed version. It's a rapidly changing language, so it's not unexpected, but a little annoying. I'm building my documentation from my source now, so I shouldn't have this problem again
+- I like that what type of allocator I'm using is very explicit (I'm using [[https://github.com/ziglang/zig/blob/master/doc/docgen.zig][docgen.zig]] as a reference for my test). [[https://ziglang.org/documentation/master/#Choosing-an-Allocator][Choosing an Allocator]] makes me happy to have that level of control
 - I like the ~defer~ keyword already, though by default it seems there's no errors or warnings if I omit it (and the memory should be freed)
 
 ** Maintainability/sustainability
 
-| Language | CLOC   | Repo health          | Comments |
-|----------+--------+----------------------+----------|
-| Zig      | 1.74M¹ | Very active. Healthy |          |
+| Language | CLOC   | Repo health          | Ecosystem | Comments |
+|----------+--------+----------------------+-----------+----------|
+| Zig      | 1.74M¹ | Very active. Healthy |           |          |
 
 ¹CLOC did not detect Zig as a language. This count does not include LLVM or other dependencies.
