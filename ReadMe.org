@@ -37,7 +37,7 @@ I selected Zig because it takes performance seriously, and has compilation-time 
 I picked two Lisp-y languages because I'm enticed by the talk of how powerful it is (I love the idea of [[https://en.wikipedia.org/wiki/Game_Oriented_Assembly_Lisp][GOAL]]), and how you can extend the language within the language. I also like that most Lisps have compile-time code execution and hotreloading. The former is good for things like serialization which are common in games but very painful in C/C++. It's also nice to make things more automatic, like module initialization. Hotreloading is good for drastically shortening the iteration time.
 
 My biggest criticisms of Lisps is how much they rely on garbage collection and data structures with poor cache characteristics (linked lists). I'm hoping Carp will give me the best of both worlds (no GC, but still Lisp-y) there. SBCL is the closest to a "normal" Lisp in case I do find it acceptable performance-wise.
-* Criteria
+* Results
 ** Features
 These are features important to me to have:
 
@@ -73,11 +73,23 @@ Zig also has excellent C ABI export ability, meaning if I write a bunch of Zig c
 - Right out of the box, the [[https://ziglang.org/documentation/master/][Hello World documentation]] did not compile against my installed version. It's a rapidly changing language, so it's not unexpected, but a little annoying. I'm building my documentation from my source now, so I shouldn't have this problem again
 - I like that what type of allocator I'm using is very explicit (I'm using [[https://github.com/ziglang/zig/blob/master/doc/docgen.zig][docgen.zig]] as a reference for my test). [[https://ziglang.org/documentation/master/#Choosing-an-Allocator][Choosing an Allocator]] makes me happy to have that level of control
 - I like the ~defer~ keyword already, though by default it seems there's no errors or warnings if I omit it (and the memory should be freed)
+- The Emacs ~zig-mode~ works quite well. Once I specified the ~zig-zig-bin~ variable, I got automatic formatting on save, which is pretty slick
 
+**** Field and function tags, a.k.a. annotations
+I was bummed to see struct field and function annotations/tags not available yet, and it probably won't be coming soon. [[https://github.com/ziglang/zig/issues/1099][See the issue]]. The issue author and I have the exact same use-case: automatic serialization and function command registration. 
+
+The commentator who said "serialization should be written by hand each time" is flat wrong: serialization is extremely boilerplate-y and painful to write. We should make the computer do that mindless work!
+
+I think I can get by via the ~@typeName~ builtin as well as external metadata structures for field tagging, but it is a damn shame the tags approach had so many detractors.
+
+For an example of how it is useful, see how Unreal Engine 4 uses ~USTRUCT~ to generate whole editors from field tags, among other things:
+- [[https://docs.unrealengine.com/en-US/Programming/UnrealArchitecture/Reference/Properties/Specifiers/index.html][Property specifiers]]
+- [[https://docs.unrealengine.com/en-US/Programming/UnrealArchitecture/Reference/Classes/Specifiers/index.html][Class specifiers]]
+- [[https://docs.unrealengine.com/en-US/Programming/UnrealArchitecture/Reference/Functions/Specifiers/index.html][Function specifiers]]
 ** Maintainability/sustainability
 
-| Language | CLOC   | Repo health          | Ecosystem | Comments |
-|----------+--------+----------------------+-----------+----------|
-| Zig      | 1.74M¹ | Very active. Healthy |           |          |
+| Language | CLOC | Repo health          | Ecosystem | Comments |
+|----------+------+----------------------+-----------+----------|
+| Zig      | 84k¹ | Very active. Healthy |           |          |
 
-¹CLOC did not detect Zig as a language. This count does not include LLVM or other dependencies.
+¹CLOC did not detect Zig as a language, though I think it did count the Zig files as C/C++ files. I used ~cloc src/ src-self-hosted/ lib/std/~ to count the source code I thought was most representative of zig (this does not include LLVM/libc/other dependencies)
