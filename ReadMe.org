@@ -73,7 +73,8 @@ Zig also has excellent C ABI export ability, meaning if I write a bunch of Zig c
 - Right out of the box, the [[https://ziglang.org/documentation/master/][Hello World documentation]] did not compile against my installed version. It's a rapidly changing language, so it's not unexpected, but a little annoying. I'm building my documentation from my source now, so I shouldn't have this problem again
 - I like that what type of allocator I'm using is very explicit (I'm using [[https://github.com/ziglang/zig/blob/master/doc/docgen.zig][docgen.zig]] as a reference for my test). [[https://ziglang.org/documentation/master/#Choosing-an-Allocator][Choosing an Allocator]] makes me happy to have that level of control
 - I like the ~defer~ keyword already, though by default it seems there's no errors or warnings if I omit it (and the memory should be freed)
-- The Emacs ~zig-mode~ works quite well. Once I specified the ~zig-zig-bin~ variable, I got automatic formatting on save, which is pretty slick
+- The Emacs ~zig-mode~ works quite well. Once I specified the ~zig-zig-bin~ variable, I got automatic formatting on save, which is pretty slick. I'm not a huge fan of the format style, but if it's not up to me I won't worry about it
+- I managed to crash the compiler deep in LLVM output. I'm writing up a repro
 
 **** Field and function tags, a.k.a. annotations
 I was bummed to see struct field and function annotations/tags not available yet, and it probably won't be coming soon. [[https://github.com/ziglang/zig/issues/1099][See the issue]]. The issue author and I have the exact same use-case: automatic serialization and function command registration. 
@@ -86,10 +87,16 @@ For an example of how it is useful, see how Unreal Engine 4 uses ~USTRUCT~ to ge
 - [[https://docs.unrealengine.com/en-US/Programming/UnrealArchitecture/Reference/Properties/Specifiers/index.html][Property specifiers]]
 - [[https://docs.unrealengine.com/en-US/Programming/UnrealArchitecture/Reference/Classes/Specifiers/index.html][Class specifiers]]
 - [[https://docs.unrealengine.com/en-US/Programming/UnrealArchitecture/Reference/Functions/Specifiers/index.html][Function specifiers]]
+
+*** SBCL
+- Emacs Slime got me up and running quickly, though I'm going to have to redefine a bunch of keys. I'm used to certain completion keybinds that I'll have to bind over whatever slime has
+- It's a bit hard to find the documentation on the language itself (in comparison, Zig is all on one page)
 ** Maintainability/sustainability
 
-| Language | CLOC | Repo health          | Ecosystem | Comments |
-|----------+------+----------------------+-----------+----------|
-| Zig      | 84k¹ | Very active. Healthy |           |          |
+| Language | CLOC | Repo health                               | Ecosystem | Comments |
+|----------+------+-------------------------------------------+-----------+----------|
+| Zig      | 84k¹ | Very active. Healthy                      |           |          |
+| Carp     | 27k  | Not many contributors. A bit weak seeming |           |          |
+| SBCL     |      | Old!                                      |           |          |
 
 ¹CLOC did not detect Zig as a language, though I think it did count the Zig files as C/C++ files. I used ~cloc src/ src-self-hosted/ lib/std/~ to count the source code I thought was most representative of zig (this does not include LLVM/libc/other dependencies)
