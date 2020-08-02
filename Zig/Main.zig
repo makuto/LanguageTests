@@ -35,46 +35,44 @@ pub fn helpArgs(comptime T: type) void {
     }
 }
 
+fn setArg(comptime T: type, comptime field: std.builtin.TypeInfo.StructField, output: *T, arg_name: []u8, arg_value: []u8) !void {
+    switch (@typeInfo(field.field_type)) {
+        .Float => {
+            if (std.fmt.parseFloat(field.field_type, arg_value)) |parsed_float| {
+                @field(output, field.name) = parsed_float;
+            } else |err| {
+                warn("Argument '{}' got input '{}' was unparsable as a {}\n", .{ arg_name, arg_value, @typeName(field.field_type) });
+                return err;
+            }
+        },
+        .Int => {
+            if (std.fmt.parseInt(field.field_type, arg_value, 10)) |parsed_value| {
+                @field(output, field.name) = parsed_value;
+            } else |err| {
+                warn("Argument '{}' got input '{}' was unparsable as a {}\n", .{ arg_name, arg_value, @typeName(field.field_type) });
+                return err;
+            }
+        },
+        .Pointer => {
+            // std.mem.copy(u8, @field(output, field.name), arg_value);
+            @field(output, field.name) = arg_value;
+        },
+        else => {
+            @compileError("Unsupported type '" ++ @typeName(field.field_type) ++ "' on field '" ++ field.name ++ "'");
+        },
+    }
+
+    warn("Set {} to {}\n", .{ field.name, @field(output, field.name) });
+}
+
 // Yes, this got hairy, but it would work for "any" args struct, not just the one I set up
-pub fn setArgFromString(comptime T: type, output: *T, arg_name: []u8, arg_value: []u8) !void {
+fn setArgFromString(comptime T: type, output: *T, arg_name: []u8, arg_value: []u8) !void {
     const type_info = @typeInfo(T);
     switch (type_info) {
         .Struct => {
             inline for (type_info.Struct.fields) |field| {
                 if (std.mem.eql(u8, arg_name, field.name)) {
-                    switch (@typeInfo(field.field_type)) {
-                        .Float => {
-                            // @field(output, field.name) = 1.0;
-                            if (std.fmt.parseFloat(field.field_type, arg_value)) |parsed_float| {
-                                @field(output, field.name) = parsed_float;
-                            } else |err| {
-                                warn("Argument '{}' got input '{}' was unparsable as a {}\n", .{ arg_name, arg_value, @typeName(field.field_type) });
-                                // Continue parsing arguments.
-                                // TODO Why does this segfault?
-                                // return err;
-                            }
-                        },
-                        .Int => {
-                            if (std.fmt.parseInt(field.field_type, arg_value, 10)) |parsed_value| {
-                                @field(output, field.name) = parsed_value;
-                            } else |err| {
-                                warn("Argument '{}' got input '{}' was unparsable as a {}\n", .{ arg_name, arg_value, @typeName(field.field_type) });
-                                // Continue parsing arguments.
-                                // TODO Why does this segfault?
-                                // return err;
-                            }
-                        },
-                        .Pointer => {
-                            // std.mem.copy(u8, @field(output, field.name), arg_value);
-                            @field(output, field.name) = arg_value;
-                        },
-                        else => {
-                            @compileError("Unsupported type '" ++ @typeName(field.field_type) ++ "' on field '" ++ field.name ++ "'");
-                        },
-                    }
-
-                    warn("Set {} to {}\n", .{ field.name, @field(output, field.name) });
-
+                    try setArg(T, field, output, arg_name, arg_value);
                     return;
                 }
             }

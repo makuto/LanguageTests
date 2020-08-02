@@ -28,9 +28,13 @@ Carp compiles into C, then uses a C compiler to create the machine code.
 - [[http://www.sbcl.org/][Homepage]]
 - [[http://www.sbcl.org/platform-table.html][Download]]
 - [[https://sourceforge.net/p/sbcl/sbcl/ci/master/tree/][Repository]]
+- [[http://sbcl.org/manual/index.html][Manual]]
+- [[http://www.gigamonkeys.com/book/][Practical Common Lisp]]
 
 SBCL has its own machine-code compiler.
 
+*** Additional setup
+[[https://www.quicklisp.org/beta/][Install Quicklisp]].
 ** /Explanation/
 I selected Zig because it takes performance seriously, and has compilation-time code execution support. I'm also a Zig sponsor, so I wanted to do this project to try out what I'm supporting :). I didn't pick Rust because I don't think the memory management overhead is worth it. I'm no expert on that though, so I could be very wrong.
 
@@ -41,11 +45,11 @@ My biggest criticisms of Lisps is how much they rely on garbage collection and d
 ** Features
 These are features important to me to have:
 
-| Language | Has REPL | Has hot-reloading | Introspection | Compile-time code generation | Memory management¹       |
-|----------+----------+-------------------+---------------+------------------------------+--------------------------|
-| Zig      | No       |                   |               |                              | [[https://ziglang.org/documentation/master/#Memory][All manual. Explicit]]     |
-| Carp     |          |                   |               |                              | [[https://github.com/carp-lang/Carp]["Automatic", no GC]]       |
-| SBCL     | Yes      |                   |               |                              | Garbage-collected ([[https://www.cons.org/cmucl/doc/gc-tuning.html][a]], [[https://medium.com/@MartinCracauer/llvms-garbage-collection-facilities-and-sbcl-s-generational-gc-a13eedfb1b31][b]]) |
+| Language | Has REPL | Has hot-reloading | Introspection     | Compile-time code generation | Memory management¹       |
+|----------+----------+-------------------+-------------------+------------------------------+--------------------------|
+| Zig      | No       | No                | Yes, without tags | Yes                          | [[https://ziglang.org/documentation/master/#Memory][All manual. Explicit]]     |
+| Carp     | Yes      | No                |                   |                              | [[https://github.com/carp-lang/Carp]["Automatic", no GC]]       |
+| SBCL     | Yes      | Yes               |                   |                              | Garbage-collected ([[https://www.cons.org/cmucl/doc/gc-tuning.html][a]], [[https://medium.com/@MartinCracauer/llvms-garbage-collection-facilities-and-sbcl-s-generational-gc-a13eedfb1b31][b]]) |
 
 ¹I'm usually working on high-performance apps like games, so it is important that I have fine-grained control over memory and can reliably avoid stalls. The language should help me achieve high performance without making me suffer for it, one way or another (hard implementation vs. bad runtime performance).
 
@@ -90,13 +94,16 @@ For an example of how it is useful, see how Unreal Engine 4 uses ~USTRUCT~ to ge
 
 *** SBCL
 - Emacs Slime got me up and running quickly, though I'm going to have to redefine a bunch of keys. I'm used to certain completion keybinds that I'll have to bind over whatever slime has
-- It's a bit hard to find the documentation on the language itself (in comparison, Zig is all on one page)
+- It's very frustrating to find the documentation. When I do find some, the answers involve piling on various external packages to make it easier, thus making the whole system more complex. In comparison, Zig is all on one page, and has plenty of easy-to-understand examples
 ** Maintainability/sustainability
 
-| Language | CLOC | Repo health                               | Ecosystem | Comments |
-|----------+------+-------------------------------------------+-----------+----------|
-| Zig      | 84k¹ | Very active. Healthy                      |           |          |
-| Carp     | 27k  | Not many contributors. A bit weak seeming |           |          |
-| SBCL     |      | Old!                                      |           |          |
+| Language | CLOC  | Repo health                                           | Ecosystem                        | Comments                                             |
+|----------+-------+-------------------------------------------------------+----------------------------------+------------------------------------------------------|
+| Zig      | 84k¹  | Very active. Healthy, financially supported           | Small, though C can be used      |                                                      |
+| Carp     | 27k   | Not many contributors. Says it's a "research project" | Very small, though C can be used | Likely to die as soon as its solo dev loses interest |
+| SBCL     | 490k² | Old! Still active, many contributors                  | Large: Common Lisp packages      | Porting would be hard because it's a custom compiler |
 
 ¹CLOC did not detect Zig as a language, though I think it did count the Zig files as C/C++ files. I used ~cloc src/ src-self-hosted/ lib/std/~ to count the source code I thought was most representative of zig (this does not include LLVM/libc/other dependencies)
+²Unlike Zig and Carp, the SBCL CLOC does include a full compiler. ~447k of SBCL is written in Lisp, i.e. the language itself, whereas Zig's compiler is in C++ and Carp's is in Haskell
+
+Note that I mean no disrespect with these evaluations, I'm only trying to be realistic about whether I would need to become the maintainer of the language in e.g. 5 or 10 years time.

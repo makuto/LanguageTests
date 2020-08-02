@@ -1,2 +1,17 @@
+(use IO)
+(use System)
+
+
+(deftype Arguments [numData Int initialValue Float incrementPerValue Float operation String operationArg1 Float])
+
+(defmacro make-auto-struct [type-name :rest definition]
+  (deftype type-name definition))
+
+(make-auto-struct StructTest numData Int)
+
+(def test-struct StructTest)
+
 (defn main []
-  (+ 1 1))
+  (let [numArgs (System.get-args-len)]
+    (for [i 0 numArgs]
+      (IO.println (System.get-arg i)))))
