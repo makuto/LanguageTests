@@ -40,7 +40,7 @@
 (defun fulfill-template (order)
   (let ((read-output "")) ;(write-output ""))
     (dolist (template-request order)
-      ; TODO More efficient way to concat in-place?
+      ; TODO More efficient way to concat in-place? e.g. don't concat, just write out a list of strs
       (setf read-output
             (concatenate 'string read-output
              (if (equal (type-of template-request) 'CONS)

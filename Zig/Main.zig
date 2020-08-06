@@ -83,6 +83,15 @@ fn setArgFromString(comptime T: type, output: *T, arg_name: []u8, arg_value: []u
     }
 }
 
+// comptime {
+//     comptime var numFuncs: i32 = 0;
+//     if (1 == 2) {
+//         @compileError("Ran at compile time!");
+//     } else {
+//         numFuncs += 1;
+//     }
+// }
+
 pub fn main() !void {
     warn("Language Tests\n", .{});
 

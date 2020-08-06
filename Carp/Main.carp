@@ -1,17 +1,32 @@
+(use Array)
 (use IO)
 (use System)
 
 
 (deftype Arguments [numData Int initialValue Float incrementPerValue Float operation String operationArg1 Float])
 
-(defmacro make-auto-struct [type-name :rest definition]
-  (deftype type-name definition))
+;; (defmacro make-auto-struct [type-name :rest definition]
+;;   (deftype type-name definition))
 
-(make-auto-struct StructTest numData Int)
+;; (make-auto-struct StructTest numData Int)
 
-(def test-struct StructTest)
+;; (def test-struct StructTest)
+(def test-applies [1 2 3])
 
 (defn main []
-  (let [numArgs (System.get-args-len)]
-    (for [i 0 numArgs]
-      (IO.println (System.get-arg i)))))
+  (do (let [numArgs (System.get-args-len)]
+        (for [i 0 numArgs]
+          (IO.println (System.get-arg i))))
+      (for [i 0 (Array.length &test-applies)]
+        (IO.println "Foo"))))
+
+;; Example macro
+(defmacro make-apply [name operator expr1 expr2]
+  ;; Arguments to functions are arrays, not lists
+  (do (eval (list 'defn name (array expr1 expr2)
+              (list operator expr1 expr2)))
+      ;; This makes the array not have a length. Why doesn't this work?
+  (set! test-applies [1 2 3])))
+(make-apply adder + a b)
+;; Interestingly, this will print at compile time as well
+(adder 1 2)

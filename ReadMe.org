@@ -45,13 +45,15 @@ My biggest criticisms of Lisps is how much they rely on garbage collection and d
 ** Features
 These are features important to me to have:
 
-| Language | Has REPL | Has hot-reloading | Introspection     | Compile-time code generation | Memory management¹       |
-|----------+----------+-------------------+-------------------+------------------------------+--------------------------|
-| Zig      | No       | No                | Yes, without tags | Yes                          | [[https://ziglang.org/documentation/master/#Memory][All manual. Explicit]]     |
-| Carp     | Yes      | No                |                   |                              | [[https://github.com/carp-lang/Carp]["Automatic", no GC]]       |
-| SBCL     | Yes      | Yes               |                   |                              | Garbage-collected ([[https://www.cons.org/cmucl/doc/gc-tuning.html][a]], [[https://medium.com/@MartinCracauer/llvms-garbage-collection-facilities-and-sbcl-s-generational-gc-a13eedfb1b31][b]]) |
+| Language | Has REPL | Has hot-reloading | Introspection                | Compile-time code generation | Memory management¹       |
+|----------+----------+-------------------+------------------------------+------------------------------+--------------------------|
+| Zig      | No       | No                | Yes, though without tags     | Yes                          | [[https://ziglang.org/documentation/master/#Memory][All manual. Explicit]]     |
+| Carp     | Yes      | Yes?              |                              |                              | [[https://github.com/carp-lang/Carp]["Automatic", no GC]]       |
+| SBCL     | Yes      | Yes               | Yes ([[http://www.ai.mit.edu/projects/iiip/doc/CommonLISP/HyperSpec/Body/fun_inspect.html#inspect][Inspect]], [[https://farid.hajji.org/en/blog/71-ansi-common-lisp-introspection][introspection]]) | Yes²                         | Garbage-collected ([[https://www.cons.org/cmucl/doc/gc-tuning.html][a]], [[https://medium.com/@MartinCracauer/llvms-garbage-collection-facilities-and-sbcl-s-generational-gc-a13eedfb1b31][b]]) |
 
-¹I'm usually working on high-performance apps like games, so it is important that I have fine-grained control over memory and can reliably avoid stalls. The language should help me achieve high performance without making me suffer for it, one way or another (hard implementation vs. bad runtime performance).
+¹I'm usually working on high-performance apps like games, so it is important that I have fine-grained control over memory and can reliably avoid stalls. The language should help me achieve high performance without making me suffer for it, one way or another (hard implementation vs. bad runtime performance). It should be possible and easy to use containers with good data locality, e.g. using vector/array instead of linked list whenever possible.
+
+²The code generation abilities in SBCL are more powerful than e.g. Zig's because SBCL has an environment, even at compile-time. This means you could have functions append themselves to a global variable during compile time, which is very useful when making e.g. keybind or command systems.
 
 *** C interoperability
 C holds such a massive amount of value to interface with, especially in game development (e.g. most console SDKs are written in C++, which is different from C but can be interfaced with through C wrappers).
@@ -65,20 +67,30 @@ This is a huge plus to Zig, because writing bindings is tedious and gratuitous.
 Zig also has excellent C ABI export ability, meaning if I write a bunch of Zig code, then switch back to C or C++, I will still be able to reasonably use that Zig code - no "boxing", weird conversions, etc. necessary.
 **** Carp
 **** SBCL
-** My Implementations
+The [[https://www.common-lisp.net/project/cffi/][CFFI]] (and [[https://www.cliki.net/FFI][others]]) provides C interop, though it requires maintaining bindings for the C interface. There are automatic binding generators, but I haven't looked too deeply into their flaws and limitations yet.
+
+C++ wrappers may be possible with [[http://swig.org/Doc1.3/Lisp.html][SWIG]].
+
+In short, it's possible, but not seamless.
+** My implementations and thoughts
 
 | Language | My CLOC | Time to implement | Executable size |
 |----------+---------+-------------------+-----------------|
-| Zig      |         | 1h                |                 |
+| Zig      |     132 | 2.5h              | 1 M             |
 | Carp     |         |                   |                 |
-| SBCL     |         |                   |                 |
+| SBCL     |      67 | 2h                | 42 M            |
+
+I did not end up making the same program, but I feel I did get an adequate feel for the languages from the simple programs I did make.
+
+SBCL has a large executable because it must package the entire SBCL compiler, Common Lisp, and runtime.
 
 *** Zig
 - Right out of the box, the [[https://ziglang.org/documentation/master/][Hello World documentation]] did not compile against my installed version. It's a rapidly changing language, so it's not unexpected, but a little annoying. I'm building my documentation from my source now, so I shouldn't have this problem again
 - I like that what type of allocator I'm using is very explicit (I'm using [[https://github.com/ziglang/zig/blob/master/doc/docgen.zig][docgen.zig]] as a reference for my test). [[https://ziglang.org/documentation/master/#Choosing-an-Allocator][Choosing an Allocator]] makes me happy to have that level of control
 - I like the ~defer~ keyword already, though by default it seems there's no errors or warnings if I omit it (and the memory should be freed)
-- The Emacs ~zig-mode~ works quite well. Once I specified the ~zig-zig-bin~ variable, I got automatic formatting on save, which is pretty slick. I'm not a huge fan of the format style, but if it's not up to me I won't worry about it
-- I managed to crash the compiler deep in LLVM output. I'm writing up a repro
+- The Emacs ~zig-mode~ works quite well. Once I specified the ~zig-zig-bin~ variable, I got automatic formatting on save, which is pretty slick. I'm not a huge fan of the format style, but if it's not up to me, I won't worry about it
+- I managed to crash the compiler deep in LLVM output. I'm attempting to write a repro so that it can be fixed
+- While the ~comptime~ keyword and introspection are big pluses, they aren't quite as powerful as I had hoped. I realized from this experiment that the Lisp-style environment, which is available to modify at compilation time and runtime, is necessary to do really powerful code generation. For example, you can write a macro in Lisp that will declare a function and append it to a global list (useful for defining commands or keybinds), then call that macro in any file which includes it. I don't think that is possible in Zig, but I could be wrong
 
 **** Field and function tags, a.k.a. annotations
 I was bummed to see struct field and function annotations/tags not available yet, and it probably won't be coming soon. [[https://github.com/ziglang/zig/issues/1099][See the issue]]. The issue author and I have the exact same use-case: automatic serialization and function command registration. 
@@ -94,16 +106,42 @@ For an example of how it is useful, see how Unreal Engine 4 uses ~USTRUCT~ to ge
 
 *** SBCL
 - Emacs Slime got me up and running quickly, though I'm going to have to redefine a bunch of keys. I'm used to certain completion keybinds that I'll have to bind over whatever slime has
-- It's very frustrating to find the documentation. When I do find some, the answers involve piling on various external packages to make it easier, thus making the whole system more complex. In comparison, Zig is all on one page, and has plenty of easy-to-understand examples
+- It's very frustrating to find the documentation. When I do find some, the answers involve piling on various external packages to make it easier, thus making the whole system more complex. In comparison, Zig is all on one page, and has plenty of easy-to-understand examples. I did find the lisp spec and multiple good resources eventually
+
+**** What makes me most nervous about SBCL
+*Packaging an executable* is a nasty process. As far as I know, there is no way to cross-compile for another operating system/architecture without running SBCL on that architecture, which is unsustainable. Zig's cross-compilation ability destroys SBCL in comparison.
+
+Additionally, SBCL executables contain absolutely everything necessary to use SBCL: the compiler, all of Common Lisp, et cetera. I should have a way to analyze and remove all code which is never utilized by my program. The compiler itself would be good to remove just to eliminate arbitrary code compilation and execution on a shipping product.
+
+See [[file:SBCL/ClocOutput.txt][SBCL/ClocOutput.txt]] for an idea of what portions of SBCL take the most code. I will likely need to dig into the internals.
+
+The *garbage collector*. I don't want to be walking on eggshells while making things, but I feel like the GC could be a ticking time bomb in regards to game performance. It stops all threads to perform collection, which means things like audio threads are going to have to be in C/C++ and "off the radar" of the SBCL runtime.
+
+I can stomach the existing garbage collector if I find it matches the following criteria:
+
+- I can always control when it can happen. For example, I could enable "no-gc" until I'm finished with a frame's worth of work. Once the frame is done, all the processor has to do is sleep for V-sync. If I can estimate how long I have to sleep that frame, I could then decide whether to trigger a GC during the sleep phase, or postpone it until the next frame's sleep
+- The garbage collector has predictable performance characteristics. If it could take 0ms one frame and 10ms the next with no control or explanation, that's unworkable. If I know I have to pay a 2ms "GC tax" every frame, I can budget around that and not get any stuttery frames (the stuttery frames will be my fault, not the GC's)
+- It is possible (and optimally, convenient) to trace garbage back to what caused the allocation. I have to know where garbage is coming from if I am going to be able to reduce the amount of garbage created
+- Common operations do not create garbage. I shouldn't need to avoid using 99% of the language because it creates too much garbage by default
+- Long collection peaks can be avoided. If I am consistently collecting garbage, I should not get large spikes of collections. Optimally, I could define a max run time where GC could stop if it's taking too long that frame, then pick up where it left off the next frame. I doubt this is feasible with the existing design
+
+As you can see, there are quite a lot of caveats. I can't help but think I will end up having to write modifications to the SBCL runtime myself in order to get acceptable performance for games. For example, I could have multiple memory management strategies, then I could switch between them per object. A simple linear allocator could handle many allocations in a single frame, then dump them all at the end of the frame by merely resetting a pointer. That would go a long way to still have convenience without losing speed: If I can do things fast and loose during a frame, knowing it'll all get dumped at the end, I will be able to implement with less caution without losing performance.
+
+Both the packaging problem and the garbage collector make me feel like shipping a viable, performant executable (and executables for other platforms) is not a concern for most SBCL developers. That's very worrying. If I go with SBCL or another Common Lisp implementation, I will definitely need to dive in to the runtime internals and make significant modifications.
+
+Garbage collection enthusiasts usually emphasize how nice it is to not worry about memory management. However, GC causes other worries: C programmers don't have to worry about poor performance characteristics. If they're doing something slow, they'll know it. I'd like to find a happy medium where I can have my cake and eat it too: not worry (much) about allocations, and not worry (much) about poor performance. I think having a small collection of custom allocators could make Lisp that thing, but a general garbage collector will not.
+
+C programs tend to be performant because idiomatic, "habitual" coding in C results in performant programs. By "habitual", I mean the decisions you make over and over again about how to construct the program result in good performance characteristics. Additionally, the "habits" are not painful to have. If I can find a way to do habitually performant coding in Lisp, it could work out. I have doubts that the design of garbage collection and reliance on it will make that possible. Will I be fighting the language?
 ** Maintainability/sustainability
 
 | Language | CLOC  | Repo health                                           | Ecosystem                        | Comments                                             |
 |----------+-------+-------------------------------------------------------+----------------------------------+------------------------------------------------------|
 | Zig      | 84k¹  | Very active. Healthy, financially supported           | Small, though C can be used      |                                                      |
 | Carp     | 27k   | Not many contributors. Says it's a "research project" | Very small, though C can be used | Likely to die as soon as its solo dev loses interest |
-| SBCL     | 490k² | Old! Still active, many contributors                  | Large: Common Lisp packages      | Porting would be hard because it's a custom compiler |
+| SBCL     | 310k² | Old! Still active, many contributors                  | Large: Common Lisp packages      | Porting would be hard because it's a custom compiler |
 
-¹CLOC did not detect Zig as a language, though I think it did count the Zig files as C/C++ files. I used ~cloc src/ src-self-hosted/ lib/std/~ to count the source code I thought was most representative of zig (this does not include LLVM/libc/other dependencies)
-²Unlike Zig and Carp, the SBCL CLOC does include a full compiler. ~447k of SBCL is written in Lisp, i.e. the language itself, whereas Zig's compiler is in C++ and Carp's is in Haskell
+¹CLOC did not detect Zig as a language, though I think it did count the Zig files as C/C++ files. I used ~cloc src/ src-self-hosted/ lib/std/~ to count the source code I thought was most representative of zig (this does not include LLVM/libc/other dependencies).
+
+²Unlike Zig and Carp, the SBCL CLOC does include a full compiler. Around 353k of SBCL is written in Lisp, i.e. the language itself, whereas Zig's compiler is in C++ and Carp's is in Haskell. Also note that I removed about 80k lines from this total because ~cloc --by-file-by-lang src~ showed the two largest Lisp files were for Japanese and Chinese encoding tables. I removed them because I probably won't be using them for my purposes. See [[file:SBCL/ClocOutput.txt][SBCL/ClocOutput.txt]] for the full CLOC output.
 
 Note that I mean no disrespect with these evaluations, I'm only trying to be realistic about whether I would need to become the maintainer of the language in e.g. 5 or 10 years time.
